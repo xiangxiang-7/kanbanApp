@@ -1,0 +1,180 @@
+// @import '../../../icon.less';
+body{
+  position: relative;
+}
+.kanban-app{
+  position: relative;
+  font-size: 18px;
+  padding-top: 20px;
+  display: flex;
+  justify-content: center;
+  .kanban-title{
+    margin-left: 30px;
+    width: 500px;
+    text-align: center;
+    color: rgb(133, 166, 255);
+    font-size: 30px;
+  }
+  .kanban-content{
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+// 进入拖拽元素
+.task.draggable-in-source{
+  background-color: rgb(133, 166, 255);
+}
+
+.task-container.finish{
+  .task-list{
+    .task{
+      border-color: rgba(163, 188, 255, 0.4);
+      border-width: 2px;
+    }
+  }
+}
+.task-container.garbage{
+  position: relative;
+  top: 40px;
+  margin-left: 80px;
+  
+  .task-type-title{
+    margin:  10px 0 ;
+    text-align: left;
+    color: #666;
+  }
+  .task-list{
+    width: 150px;
+    border: 2px solid #ddd;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    .task{
+      width: 130px;
+      color: #777;
+      font-size: 17px;
+    }
+  }
+}
+
+.task-container{
+  position: relative;
+  margin-left: 30px;
+  overflow: hidden;
+  .task-type-title{
+    margin:  20px 0 ;
+    text-align: left;
+  }
+  .add-one-task{
+    position: absolute;
+    top: 0;
+    right: 0;
+    border-bottom:solid 2px  rgb(133, 166, 255);
+    color:#333;
+    display: inline-block;
+  }
+
+  .task-list{
+    width: 500px; 
+    min-height: 200px;
+    border-radius: 10px;
+    border: 2px solid #666;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    align-items: flex-start;
+    padding: 5px;
+
+    .task{
+      cursor:pointer;
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 150px; 
+      height: 50px;
+      border-radius: 3px;
+      border: 1px solid #ddd;
+      margin: 6px 6px 0 ;
+      &:hover{
+        .garbage-icon{
+          display: block;
+        }
+      }
+      .garbage-icon:hover{
+        display: block;
+      }
+      .garbage-icon{
+        cursor:pointer;
+        display: none;
+        position:absolute;
+        top: -10px;
+        right: -10px;
+        width: 20px;
+        height: 20px;
+        color: #fff;
+        border: solid 1px  rgb(133, 166, 255);
+        background-color: rgb(133, 166, 255);
+        text-align: center;
+        line-height: 20px;
+        border-radius: 20px;
+      }
+    }
+  }
+}
+.add-modal-container, .edit-modal-container, .del-modal-container {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color:rgba(0,0,0,.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  .modal-content{
+    width: 350px;
+    background-color:rgba(255,255,255,1);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    padding: 40px
+  }
+  .input-task{
+    width: 200px;
+    height: 35px;
+    font-size: 20px;
+    border: solid #ddd 2px;
+    border-radius: 8px;
+    padding: 0 5px;
+    outline: none;
+  }
+  .btn-wrap{
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 20px;
+    button{ 
+      font-size: 18px;
+      border-radius: 5px;
+      border:none;  
+      padding: 10px 20px;
+      color: #999;
+      &.ok{
+        background-color: rgb(133, 166, 255);
+        margin-right: 20px;
+        color: #fff;
+      }
+    }
+  }
+}

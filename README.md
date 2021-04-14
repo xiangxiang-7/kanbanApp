@@ -5,3 +5,7 @@
 drag and drop api（也就是需要自己通过鼠标事件来模拟拖拽，以实现更好的可定制性）
 */
 // code goes here
+```
+tnpm install & tnpm run dev
+
+```

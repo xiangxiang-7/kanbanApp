@@ -15,9 +15,11 @@ export function closest(element, value) {
   const nodeList = value;
   const singleElement = value;
 
-  const isSelector = Boolean(typeof value === 'string');
-  const isFunction = Boolean(typeof value === 'function');
-  const isNodeList = Boolean(value instanceof NodeList || value instanceof Array);
+  const isSelector = Boolean(typeof value === "string");
+  const isFunction = Boolean(typeof value === "function");
+  const isNodeList = Boolean(
+    value instanceof NodeList || value instanceof Array,
+  );
   const isElement = Boolean(value instanceof HTMLElement);
 
   function conditionFn(currentElement) {
@@ -27,17 +29,20 @@ export function closest(element, value) {
     // 返回 current父节点 selector能选中
     if (isSelector) {
       return matchFunction.call(currentElement, selector);
-    // 返回 current父节点 包含在nodeList中
-    } if (isNodeList) {
+      // 返回 current父节点 包含在nodeList中
+    }
+    if (isNodeList) {
       return [...nodeList].includes(currentElement);
-    // 返回 current父节点===singleElement的
-    } if (isElement) {
+      // 返回 current父节点===singleElement的
+    }
+    if (isElement) {
       return singleElement === currentElement;
-    // 返回 current父节点 执行function能true
-    } if (isFunction) {
+      // 返回 current父节点 执行function能true
+    }
+    if (isFunction) {
       return callback(currentElement);
     }
-      return null;
+    return null;
   }
 
   let current = element;

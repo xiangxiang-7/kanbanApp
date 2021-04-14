@@ -26,33 +26,32 @@ const defaultClasses = {
 export const defaultOptions = {
   draggable: ".draggable-source",
   classes: defaultClasses,
-  delay: 0,
-  distance: 10,
   sensors: [MouseSensor],
+  plugins: [],
 };
 
 export default class Draggable {
-  constructor(containerData = [], options = {}) {
-    const containerIds = containerData.map((a) => a.containerId);
-    const containerObj = {};
-    containerData.forEach((c) => {
-      containerObj[c.containerId] = c.draggableList;
-    });
+  constructor(containerIds = [], options = {}) {
+    // 容器ID
     if (containerIds.length === 0) {
       throw new Error("containerData invalid check containerData.length !== 0");
     }
     this.containerIds = containerIds;
-    this.containerObj = containerObj;
+    // 容器 => HTMLElement
     this.containerEles = this.initContainerById(containerIds);
 
     this.options = {
       ...defaultOptions,
       ...options,
     };
+    // 事件派发器
     this.emitter = new Emitter();
+    // 是否正在拖拽
     this.dragging = false;
-    this.plugins = [];
-    this.sensors = [];
+    // 插件
+    this.plugins = [...defaultOptions.plugins, ...(options.plugins || [])];
+    // 传感器
+    this.sensors = [...defaultOptions.sensors, ...(options.sensors || [])];
 
     this[onDragStart] = this[onDragStart].bind(this);
     this[onDragMove] = this[onDragMove].bind(this);
@@ -63,22 +62,24 @@ export default class Draggable {
     document.addEventListener("drag:move", this[onDragMove], true);
     document.addEventListener("drag:stop", this[onDragStop], true);
 
-    this.addSensor(this.options.sensors);
+    // 初始化传感器
+    this.addSensor(this.sensors);
+    // 初始化插件
+    this.addPlugins(this.plugins);
 
+    // 拖拽初始化完成事件
     const draggableInitializedEvent = new DraggableInitializedEvent({
       draggable: this,
     });
-
     this.trigger(draggableInitializedEvent);
   }
 
   // 用唯一ID初始化拖拽容器
   initContainerById(containerIds) {
-    if (Object.prototype.toString.call(containerIds) === "[object Array]") {
+    const toStringType = Object.prototype.toString.call(containerIds);
+    if (toStringType === "[object Array]") {
       this.containerIds = [...containerIds];
-    } else if (
-      Object.prototype.toString.call(containerIds) === "[object String]"
-    ) {
+    } else if (toStringType === "[object String]") {
       this.containerIds = [containerIds];
     } else {
       throw new Error(
@@ -111,6 +112,17 @@ export default class Draggable {
 
     activeSensors.forEach((sensor) => sensor.apply());
     this.sensors = [...activeSensors];
+
+    return this;
+  }
+
+  // 插件初始化 啥插件都没有...
+  addPlugins(plugins) {
+    // const activePlugins = plugins.map(
+    //   (plugins) => new Plugins(this.containerEles, this.options),
+    // );
+    // activePlugins.forEach((plugins) => plugins.apply());
+    // this.plugins = [...activePlugins];
 
     return this;
   }

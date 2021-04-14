@@ -19,8 +19,8 @@ const startDrag = Symbol("startDrag");
 const onDistanceChange = Symbol("onDistanceChange");
 
 export default class MouseSensor extends SensorBase {
-  constructor(containers = [], options = {}) {
-    super(containers, options);
+  constructor(containerEles = [], options = {}) {
+    super(containerEles, options);
 
     this.pageX = null;
     this.pageY = null;
@@ -30,8 +30,12 @@ export default class MouseSensor extends SensorBase {
     this[onMouseUp] = this[onMouseUp].bind(this);
     this[startDrag] = this[startDrag].bind(this);
     this[onDistanceChange] = this[onDistanceChange].bind(this);
+
+    // 最小距离开始拖拽
+    this.minDistance = options.minDistance || 10;
   }
 
+  // 挂载mousedown事件
   apply() {
     document.addEventListener("mousedown", this[onMouseDown], true);
   }
@@ -45,7 +49,7 @@ export default class MouseSensor extends SensorBase {
     console.log("触发onMouseDown");
 
     // 找到target最近的container
-    const container = closest(event.target, this.containers);
+    const container = closest(event.target, this.containerEles);
     if (!container) {
       return;
     }
@@ -72,7 +76,7 @@ export default class MouseSensor extends SensorBase {
     document.addEventListener("mousemove", this[onDistanceChange]);
   }
 
-  // onDistanceChange判断是否进行拖拽 绑定onMosueMove事件
+  // 开始拖拽的前置判断 绑定onMosueMove事件
   [startDrag]() {
     // eslint-disable-next-line no-console
     console.log("触发startDrag");
@@ -98,11 +102,10 @@ export default class MouseSensor extends SensorBase {
     document.addEventListener("mousemove", this[onMouseMove]);
   }
 
-  // 开始拖拽的前置判断 挂载到mousemove上
+  // onDistanceChange判断是否进行拖拽 触发startDrag
   [onDistanceChange](event) {
     console.log("触发onDistanceChange");
     const { pageX, pageY } = event;
-    const { distance } = this.options;
     const { startEvent } = this;
 
     Object.assign(this, { pageX, pageY });
@@ -112,15 +115,13 @@ export default class MouseSensor extends SensorBase {
     }
 
     // 计算onMouseDown和mousemove的直线距离
-    // eslint-disable-next-line max-len
     const distanceMoveed =
       euclideanDistance(startEvent.pageX, startEvent.pageY, pageX, pageY) || 0;
 
-    // eslint-disable-next-line no-console
     console.log(`onDistanceChange, distance:${distanceMoveed}`);
 
     // 移除onDistanceChange开始拖拽 解绑onDistanceChange
-    if (distanceMoveed >= distance) {
+    if (distanceMoveed >= this.minDistance) {
       document.removeEventListener("mousemove", this[onDistanceChange]);
       this[startDrag]();
     }

@@ -1,9 +1,9 @@
 // 传感器BaseClass    鼠标事件 | 手势
 
 export default class Sensor {
-  constructor(containers = [], options = {}) {
+  constructor(containerEles = [], options = {}) {
     // 当前可拖拽的containers =>  HTMLElement
-    this.containers = [...containers];
+    this.containerEles = [...containerEles];
     // 缓存option
     this.options = {
       distance: 10, // 最小拖动距离

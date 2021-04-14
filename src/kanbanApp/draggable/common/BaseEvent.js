@@ -1,7 +1,7 @@
-const canceled = Symbol('canceled');
+const canceled = Symbol("canceled");
 
 export default class BaseEvent {
-  static type = 'event';
+  static type = "event";
 
   constructor(data) {
     this[canceled] = false;

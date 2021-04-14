@@ -1,6 +1,6 @@
-import React, { useEffect, useState, useCallback } from 'react'
-import {draggableCalss,containerCalss, FINISHTASKLIST, CREATETASKLIST, taskStatusTitleMap, TITLE} from './constant'
-import {TaskStatusType,ContainerStatusType,TaskType} from './constant'
+import React, { useEffect, useState, useCallback, useMemo } from 'react'
+import {draggableCalss, containerCalss, FINISHTASKLIST, CREATETASKLIST, taskStatusTitleMap, TITLE} from './constant'
+import {TaskStatusType, ContainerStatusType, TaskType, ContainerInfo} from './constant'
 import Sortable from './draggable/sort/Sortable';
 import move from './draggable/sort/move'
 import { closest } from './utils'
@@ -16,24 +16,25 @@ const getDraggableList = (id:string) => {
 const getContainer = (id:string) => {
   return window.kanbanAppData.filter(c => id === c.containerId )[0]
 }
-
 const indexOf = (arr:Array<any>, id:string) => {
   const item = arr.filter(a => id === a.id)[0]
   return arr.indexOf(item)
 }
 
 // 种缓存
-const cacheKanbanAppDate = () => {
+const cacheKanbanAppData = () => {
   window.kanbanAppData.forEach((c:any) => {
     localStorage.setItem(`${c.containerId}`,JSON.stringify(c.draggableList))
   });
 }
 
 export default function KanbanApp () {
+  // 未完成任务列表
   const [createTaskList, setCreateTaskList] = useState<Array<TaskType>>([])
+  // 已完成任务列表
   const [finishTaskList, setFinishTaskList] = useState<Array<TaskType>>([])
 
-  // 获取缓存数据
+  // 获取缓存数据初始化
   useEffect(()=>{
     try{
       const createListItem = localStorage.getItem(`${ContainerStatusType.CONTAINER_CREATE}`)
@@ -54,27 +55,28 @@ export default function KanbanApp () {
   },[])
 
   // 看板大数据
-  window.kanbanAppData = [{
+  window.kanbanAppData = useMemo(()=>[{
     containerId:ContainerStatusType.CONTAINER_CREATE,
     draggableList:[...createTaskList],
-    // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-    dispatch: (list:any)=>{ setCreateTaskList(list), cacheKanbanAppDate()}
+    dispatch: (list:any)=>{ setCreateTaskList(list), cacheKanbanAppData()}
   },{
     containerId:ContainerStatusType.CONTAINER_FINISH,
     draggableList:[...finishTaskList],
-    // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-    dispatch: (list:any)=>{ setFinishTaskList(list), cacheKanbanAppDate()}
-  }]
+    dispatch: (list:any)=>{ setFinishTaskList(list), cacheKanbanAppData()}
+  }],[createTaskList, finishTaskList])
 
   // 多个container初始化
   useEffect(()=>{
     const MultipleContainers = () => {
-      const sortable = new Sortable(window.kanbanAppData, {
+      const sortable = new Sortable([
+        ContainerStatusType.CONTAINER_CREATE,
+        ContainerStatusType.CONTAINER_FINISH
+      ], {
         draggable: draggableCalss,
       });
-    
+      
+      // 注册sort
       sortable.on('sortable:sort', (e:any) => {
-        // const {sourceId, sourceContainerId, targetId, targetContainerId } = evt.data
         const { sourceEle, sourceContainerEle, targetEle, targetContainerEle } = e.dragEvent
         
         // 获取ID进行move
@@ -82,7 +84,7 @@ export default function KanbanApp () {
         const targetContainerId =  targetContainerEle?.dataset.id 
         const sourceId = sourceEle?.dataset.id 
         const targetId = targetEle?.dataset.id 
-        console.log('=======   开始move ======')
+        console.log('=======   开始move  ======')
         console.log(`${sourceId}  ==> ${targetId} ${sourceContainerId} ==> ${targetContainerId}`)
         if(!sourceContainerId || !targetContainerId || !sourceId){
           return
@@ -99,7 +101,7 @@ export default function KanbanApp () {
         if (!moves) {
           return;
         }
-        console.log('=======   排序结果 ======')
+        console.log('=======   排序结果  ======')
         console.log(`${moves.sourceContainerList.map((i:any)=>i.id).join('__')} `)
         console.log(`${moves.targetContainerList.map((i:any)=>i.id).join('__')} `)
 

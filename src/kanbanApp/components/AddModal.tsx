@@ -1,7 +1,11 @@
 import React, { useState, useCallback } from 'react'
-
+import { TaskType } from '../constant'
+interface Props{
+  add: (content: string)=>void,
+  close: ()=>void,
+}
 // eslint-disable-next-line import/no-anonymous-default-export
-export default function (props) {
+export default function (props:Props) {
   const [inputValue,setInputValue] = useState('')
   // 输入任务标题
   const onChange = useCallback((e)=>{

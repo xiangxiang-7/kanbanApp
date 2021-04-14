@@ -1,16 +1,30 @@
 import React, { useState, useCallback } from 'react'
+import { EditType } from '../constant'
 
 // eslint-disable-next-line import/no-anonymous-default-export
-export default function (props) {
+interface Props{
+  editData: {
+    type:EditType,
+    content:string
+  },
+  edit: (content:string)=>void,
+  close: ()=>void,
+}
+
+const editTextMap = {
+  [EditType.TASK]:'任务',
+  [EditType.TITLE]:'看板'
+}
+export default function (props: Props) {
   const [inputValue,setInputValue] = useState('')
-  // 输入修改后的任务标题
+  // 输入修改后的内容
   const onChange = useCallback((e)=>{
     setInputValue(e.target.value)
   },[])
 
-  // 确定修改任务
+  // 确定修改
   const confirm = useCallback(()=>{
-    if(inputValue === props.task.title){
+    if(inputValue === props.editData.content){
       alert('没做任何修改')
       return 
     }
@@ -19,7 +33,7 @@ export default function (props) {
       props.edit(inputValue)
       cancel()
     }else{
-      alert(inputValue.length >=8 ? '任务标题超过字数' : '空标题不能创建任务')
+      alert(inputValue.length >=8 ? '标题超过字数' : '空标题')
     }
   },[inputValue])
 
@@ -29,12 +43,11 @@ export default function (props) {
     setInputValue('')
   },[])
 
-
-  return props.task ? <div className="edit-modal-container" >
+  return props.editData ? <div className="edit-modal-container" >
     <div className="modal-content">
       <div className="input-wrap">
-        <p>修改任务标题(不超过8个字)</p>
-        <input type="text" className="input-task" onChange={onChange} defaultValue={props.task.title}/>
+        <p>修改{editTextMap[props.editData.type]}标题(不超过8个字)</p>
+        <input type="text" className="input-task" onChange={onChange} defaultValue={props.editData.content}/>
       </div>
       <div className="btn-wrap">
         <button onClick={confirm} className="ok">确定</button>

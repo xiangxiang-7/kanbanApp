@@ -13,6 +13,10 @@ export enum ContainerStatusType {
   CONTAINER_CREATE = "CONTAINER_CREATE", // 未完成任务列表Id
   CONTAINER_FINISH = "CONTAINER_FINISH", // 已完成任务列表Id
 }
+export enum EditType {
+  TITLE = "TITLE",
+  TASK = "TASK",
+}
 
 export interface TaskType {
   id: string; // 唯一任务ID 暂且以时间戳

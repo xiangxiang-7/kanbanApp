@@ -1,7 +1,15 @@
 import React, {useCallback } from 'react'
+import { TaskType } from '../constant'
+
+interface Props{
+  task: TaskType,
+  garbage: (task: TaskType)=>void,
+  close: ()=>void,
+}
+
 
 // eslint-disable-next-line import/no-anonymous-default-export
-export default function (props) {
+export default function (props:Props) {
 
   // 确定删除
   const deleteTask = useCallback(()=>{

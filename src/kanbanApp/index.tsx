@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react'
-import {draggableCalss, containerCalss, FINISHTASKLIST, CREATETASKLIST, taskStatusTitleMap, TITLE} from './constant'
+import {draggableCalss, containerCalss, FINISHTASKLIST, CREATETASKLIST, taskStatusTitleMap, TITLE, EditType} from './constant'
 import {TaskStatusType, ContainerStatusType, TaskType, ContainerInfo} from './constant'
 import Sortable from './draggable/sort/Sortable';
 import move from './draggable/sort/move'
@@ -29,6 +29,8 @@ const cacheKanbanAppData = () => {
 }
 
 export default function KanbanApp () {
+  // 看板标题
+  const [title, setTitle] = useState('')
   // 未完成任务列表
   const [createTaskList, setCreateTaskList] = useState<Array<TaskType>>([])
   // 已完成任务列表
@@ -38,18 +40,21 @@ export default function KanbanApp () {
   useEffect(()=>{
     try{
       const createListItem = localStorage.getItem(`${ContainerStatusType.CONTAINER_CREATE}`)
-      console.log(createListItem)
       const createList = createListItem ? JSON.parse(createListItem) :  CREATETASKLIST
       createList && setCreateTaskList(createList)
 
       const finishListItem = localStorage.getItem(`${ContainerStatusType.CONTAINER_FINISH}`)
-      console.log(finishListItem)
       const finishList = finishListItem ? JSON.parse(finishListItem) :  FINISHTASKLIST
       finishList && setFinishTaskList(finishList)
-      console.log(createList,finishList)
+
+      const title = localStorage.getItem(`title`) || TITLE
+      setTitle(title)
+
+      TITLE
     }catch(e){
       setCreateTaskList(CREATETASKLIST)
       setFinishTaskList(FINISHTASKLIST)
+      setTitle(TITLE)
       console.error('缓存读取失败')
     }
   },[])
@@ -188,42 +193,74 @@ export default function KanbanApp () {
   const [currentTask, setcurrentTask] = useState(null)
   // 双击编辑任务标题
   const [isShowEditModal,setShowEditModal] = useState(false)
-  const editTask = useCallback((title)=>{
+  // 更新任务
+  const editTask = useCallback((content)=>{
+    console.log('--content',content,currentTask)
     if(!currentTask){return}
-
     // 更新列表数据
-    // eslint-disable-next-line
     const currentContainerId = `CONTAINER_${currentTask.status}`
     const container = getContainer(currentContainerId)
     if(!container) {return}
 
-    // eslint-disable-next-line
     const taskIndex = indexOf(container.draggableList, currentTask.id) 
-    container.draggableList[taskIndex].title = title
+    container.draggableList[taskIndex].title = content
     container.dispatch([...container.draggableList])
   },[currentTask])
+  // 更新标题
+  const editTitle = useCallback((content)=>{
+    setTitle(content)
+    localStorage.setItem(`title`,content)
+  },[currentTask])
+
   // 打开/关闭 编辑弹窗
-  const openEditModal = useCallback((event)=>{
-    const containerTarget = closest(event.target, containerCalss)
-    const container = getContainer(containerTarget.id)
-    const taskIndex = indexOf(container.draggableList, event.target.dataset.id)
-    const currentTask = container.draggableList[taskIndex]
-    if(currentTask){
-      setcurrentTask(currentTask)
+  const [editData, setEditData] = useState(null)
+  const openEditModal = useCallback((event, editType?:EditType)=>{
+    // 编辑看板标题
+    setShowEditModal(true)
+    const type = editType || EditType.TASK
+    if(type === EditType.TITLE){
+      setEditData({
+        type: EditType.TITLE,
+        content: title
+      })
       setShowEditModal(true)
+    } if(type === EditType.TASK){
+      // 编辑任务
+      const containerTarget = closest(event.target, containerCalss)
+      const container = getContainer(containerTarget.id)
+      const taskIndex = indexOf(container.draggableList, event.target.dataset.id)
+      const currentTask = container.draggableList[taskIndex]
+      if(currentTask){
+        setEditData({
+          type: EditType.TASK,
+          content: currentTask.title
+        })
+        setcurrentTask(currentTask)
+        setShowEditModal(true)
+      }
     }
-    console.log(currentTask)
-  },[])
+  },[title])
   const closeEditModal = useCallback(()=>{
     setShowEditModal(false)
+    setEditData(null)
     setcurrentTask(null)
   },[])
+  // 编辑成功回调
+  const editTrigger = useCallback((content)=>{
+    console.log(content, editData.type)
+    if(editData?.type === EditType.TASK){
+      editTask(content)
+    }else if(editData?.type === EditType.TITLE){
+      editTitle(content)
+    }
+    setEditData(null)
+  },[editData])
 
 
   // 使用受控组件来处理数据,数据由react来管理
   return <div className="kanban-app" >
     <div className="kanban-content">
-      <div className="kanban-title">{TITLE}</div>
+      <div className="kanban-title" onDoubleClick={(event)=>{console.log('---');openEditModal(event,EditType.TITLE)}} >{title}</div>
       {/* 未完成任务列表 */}
       <div className="task-container">
         <div className="add-one-task" onClick={openAddModal}>添加</div>
@@ -263,8 +300,8 @@ export default function KanbanApp () {
 
     {/* 添加任务弹窗 */}
     {isShowAddModal && <AddModal add={addTask} close={closeAddModal}/>}
-    {/* 编辑任务弹窗 */}
-    {isShowEditModal && <EditModal task={currentTask} edit={editTask} close={closeEditModal}/>}
+    {/* 编辑任务/标题弹窗 */}
+    {isShowEditModal && <EditModal editData={editData} edit={editTrigger} close={closeEditModal}/>}
     {/* 删除任务弹窗 */}
     {isShowGarbageModal && <GarbageModal task={currentTask} garbage={garbageTask} close={closeGarbageModal}/>}
   </div>

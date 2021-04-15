@@ -8,4 +8,6 @@ drag and drop api（也就是需要自己通过鼠标事件来模拟拖拽，以
 ```
 tnpm install & tnpm run dev
 
+打开 http://localhost:9000 访问
+
 ```

@@ -124,11 +124,12 @@
   var enableNewReconciler = false; // Errors that are thrown while unmounting (or after in the case of passive effects)
   var warnAboutStringRefs = false;
 
+  // 所有绑定的原生事件名称Set
   var allNativeEvents = new Set();
   /**
    * Mapping from registration name to event name
    */
-
+  // key: react事件名称 value: 为原生事件数组
   var registrationNameDependencies = {};
   /**
    * Mapping from lowercase registration names to the properly cased version,
@@ -136,13 +137,20 @@
    * only in true.
    * @type {Object}
    */
-
+   // key: react事件名称小写 value: react事件名称
   var possibleRegistrationNames = {}; // Trust the developer to only use possibleRegistrationNames in true
 
+  // 注册冒泡事件和捕获事件
+  // registrationName 为react事件名称
+  // dependencies 为原生事件名称[]
   function registerTwoPhaseEvent(registrationName, dependencies) {
     registerDirectEvent(registrationName, dependencies);
     registerDirectEvent(registrationName + "Capture", dependencies);
   }
+
+  // 注册react事件core
+  // registrationName 为react事件名称
+  // dependencies 为原生事件名称[]
   function registerDirectEvent(registrationName, dependencies) {
     {
       if (registrationNameDependencies[registrationName]) {
@@ -154,17 +162,21 @@
       }
     }
 
+    // registrationNameDependencies map  保存事件对应关系 {key(react事件) : 原生事件[]}
     registrationNameDependencies[registrationName] = dependencies;
 
     {
       var lowerCasedName = registrationName.toLowerCase();
+      // possibleRegistrationNames react事件小写保存数组
       possibleRegistrationNames[lowerCasedName] = registrationName;
 
+      // onDoubleClick特殊的react事件名称重新命名
       if (registrationName === "onDoubleClick") {
         possibleRegistrationNames.ondblclick = registrationName;
       }
     }
 
+    // allNativeEvents Set结构 把所有的原生事件名称都添加进去
     for (var i = 0; i < dependencies.length; i++) {
       allNativeEvents.add(dependencies[i]);
     }
@@ -5904,10 +5916,7 @@
     }
   }
 
-  var DiscreteEvent = 0;
-  var UserBlockingEvent = 1;
-  var ContinuousEvent = 2;
-
+  
   /**
    * Generate a mapping of standard vendor prefixes using the defined style property and event name.
    *
@@ -5993,6 +6002,11 @@
   var ANIMATION_START = getVendorPrefixedEventName("animationstart");
   var TRANSITION_END = getVendorPrefixedEventName("transitionend");
 
+  // 定义优先级事件变量
+  var DiscreteEvent = 0; // 对应列表discreteEventPairsForSimpleEventPlugin
+  var UserBlockingEvent = 1; // 对应userBlockingPairsForSimpleEventPlugin
+  var ContinuousEvent = 2; // 对应continuousPairsForSimpleEventPlugin
+
   var topLevelEventsToReactNames = new Map();
   var eventPriorities = new Map(); // We store most of the events in this module in pairs of two strings so we can re-use
   // the code required to apply the same logic for event prioritization and that of the
@@ -6003,6 +6017,7 @@
   // Lastly, we ignore prettier so we can keep the formatting sane.
   // prettier-ignore
 
+  // 事件等级为0的事件类型 index == 2n是原生事件 index == 2n+1是react合成事件名称
   var discreteEventPairsForSimpleEventPlugin = ['cancel', 'cancel', 'click', 'click', 'close', 'close', 'contextmenu', 'contextMenu', 'copy', 'copy', 'cut', 'cut', 'auxclick', 'auxClick', 'dblclick', 'doubleClick', // Careful!
   'dragend', 'dragEnd', 'dragstart', 'dragStart', 'drop', 'drop', 'focusin', 'focus', // Careful!
   'focusout', 'blur', // Careful!
@@ -6015,9 +6030,9 @@
     "compositionend",
     "compositionupdate",
   ];
-
+   // 事件等级为1的事件类型 index == 2n是原生事件 index == 2n+1是react合成事件名称
   var userBlockingPairsForSimpleEventPlugin = ['drag', 'drag', 'dragenter', 'dragEnter', 'dragexit', 'dragExit', 'dragleave', 'dragLeave', 'dragover', 'dragOver', 'mousemove', 'mouseMove', 'mouseout', 'mouseOut', 'mouseover', 'mouseOver', 'pointermove', 'pointerMove', 'pointerout', 'pointerOut', 'pointerover', 'pointerOver', 'scroll', 'scroll', 'toggle', 'toggle', 'touchmove', 'touchMove', 'wheel', 'wheel']; // prettier-ignore
-
+   // 事件等级为2的事件类型 index == 2n是原生事件 index == 2n+1是react合成事件名称
   var continuousPairsForSimpleEventPlugin = [
     "abort",
     "abort",
@@ -6083,6 +6098,7 @@
    * and registers them.
    */
 
+  // 设置react合成事件的优先级 & 绑定react事件
   function registerSimplePluginEventsAndSetTheirPriorities(
     eventTypes,
     priority,
@@ -6093,13 +6109,22 @@
     // result in far fewer object allocations and property accesses
     // if we only use three arrays to process all the categories of
     // instead of tuples.
+
+    console.error('--- registerSimplePluginEventsAndSetTheirPriorities ---')
+    // i === 2n, react合成事件名字 eventTypes是map类型 {key: []}
     for (var i = 0; i < eventTypes.length; i += 2) {
+      // 合成事件名称
       var topEvent = eventTypes[i];
+      // 原生事件名称
       var event = eventTypes[i + 1];
+      // react事件名称首字母大写
       var capitalizedEvent = event[0].toUpperCase() + event.slice(1);
+      // react事件名称拼接
       var reactName = "on" + capitalizedEvent;
+      // 设置react事件的优先级
       eventPriorities.set(topEvent, priority);
       topLevelEventsToReactNames.set(topEvent, reactName);
+      // 注册react事件对应的原生事件
       registerTwoPhaseEvent(reactName, [topEvent]);
     }
   }
@@ -6117,7 +6142,9 @@
 
     return priority === undefined ? ContinuousEvent : priority;
   }
+  // 为react合成事件区分优先级注册
   function registerSimpleEvents() {
+    console.error('--- registerSimpleEvents ---')
     registerSimplePluginEventsAndSetTheirPriorities(
       discreteEventPairsForSimpleEventPlugin,
       DiscreteEvent,
@@ -9605,6 +9632,7 @@
   }
 
   // TODO: remove top-level side effect.
+  // 注册react事件
   registerSimpleEvents();
   registerEvents$2();
   registerEvents$1();
@@ -9816,9 +9844,12 @@
       listenerSet.add(listenerSetKey);
     }
   }
+  // 绑定事件tag
   var listeningMarker = "_reactListening" + Math.random().toString(36).slice(2);
+  // 绑定事件
   function listenToAllSupportedEvents(rootContainerElement) {
-    {
+    { 
+      // 如果已经绑定过了 直接返回
       if (rootContainerElement[listeningMarker]) {
         // Performance optimization: don't iterate through events
         // for the same portal container or root node more than once.
@@ -10358,6 +10389,7 @@
   var normalizeHTML;
 
   {
+    console.error()
     warnedUnknownTags = {
       // There are working polyfills for <dialog>. Let people use it.
       dialog: true,
@@ -12636,6 +12668,8 @@
   function precacheFiberNode(hostInst, node) {
     node[internalInstanceKey] = hostInst;
   }
+
+  // 赋值 node["__reactContainer$" + randomKey ] 为当前挂载节点
   function markContainerAsRoot(hostRoot, node) {
     node[internalContainerInstanceKey] = hostRoot;
   }
@@ -12739,6 +12773,7 @@
    */
 
   // 节点是否有  internalInstanceKey = "__reactFiber$" + randomKey 属性
+  // 对标 markContainerAsRoot 函数在render过后会增加internalContainerInstanceKey标记次节点被挂载过
   function getInstanceFromNode(node) {
     var inst = node[internalInstanceKey] || node[internalContainerInstanceKey];
 
@@ -14225,6 +14260,7 @@
     currentlyProcessingQueue = null;
   }
 
+  // 创建queue 赋值给 fiber.updateQueue
   function initializeUpdateQueue(fiber) {
     var queue = {
       baseState: fiber.memoizedState,
@@ -28979,7 +29015,7 @@
     this.index = 0;
 
     this.ref = null;
-    // 在 setState 之后 pendingProps 里存的新的 props 
+    // 在 setState 之后 pendingProps 里存的新的 props
     this.pendingProps = pendingProps;
     // 在 setState 之后 memoizedProps 存的老的 props
     this.memoizedProps = null;
@@ -29060,7 +29096,7 @@
 
   // 创建fiberNode
   var createFiber = function (tag, pendingProps, key, mode) {
-    console.error('--- createFiber ---', `rootFiber: ${new FiberNode(tag, pendingProps, key, mode)}`)
+    console.error('--- createFiber ---', `Fiber:`, new FiberNode(tag, pendingProps, key, mode))
     // $FlowFixMe: the shapes are exact here but Flow doesn't like constructors
     return new FiberNode(tag, pendingProps, key, mode);
   };
@@ -29259,6 +29295,7 @@
 
     return workInProgress;
   }
+  // 创建fiber函数
   function createHostRootFiber(tag) {
     console.error('--- createHostRootFiber ---')
     var mode;
@@ -29674,17 +29711,17 @@
     // root.current = uninitializedFiber
     // uninitializedFiber.stateNode = root
 
-    // 创建一个FiberRoot根节点
+    // 创建一个Fiber根节点
     var root = new FiberRootNode(containerInfo, tag, hydrate);
-    console.error('--- createFiberRoot ---'.`fiberRoot:${root}`)
+    console.error('--- createFiberRoot ---',`fiberRoot`,root)
     // stateNode is any.
     
-    // 创建一个RootFiber第一个节点  FiberRoot.current 指向uninitializedFiber
+    // 创建一个Fiber第一个节点  FiberRoot.current 指向uninitializedFiber
     var uninitializedFiber =  createHostRootFiber(tag);
     root.current = uninitializedFiber;
     uninitializedFiber.stateNode = root;
 
-    // todotodo
+    // 创建queue 赋值给 fiber.updateQueue
     initializeUpdateQueue(uninitializedFiber);
     return root;
   }
@@ -30266,11 +30303,11 @@
   function ReactDOMBlockingRoot(container, tag, options) {
     console.error('--- new ReactDOMBlockingRoot() ---')
 
-    // 总结: 
-    //  root 是 ReactRoot 实例，
-    // root._internalRoot 是 FiberRootNode 实例，
-    // root._internalRoot.current 是 FiberNode 实例，
-    // root._internalRoot.current.stateNode = root._internalRoot
+    // 总结:
+    // this 是 ReactRoot 实例，
+    // this._internalRoot 是 FiberRootNode 实例，
+    // this._internalRoot.current 是 FiberNode 实例，
+    // this._internalRoot.current.stateNode = this._internalRoot
     this._internalRoot = createRootImpl(container, tag, options);
   }
 
@@ -30341,12 +30378,15 @@
     
     // 创建 Fiber树 返回root节点
     var root = createContainer(container, tag, hydrate);
+
+    // 标记该container节点被render过了
     markContainerAsRoot(root.current, container);
     var containerNodeType = container.nodeType;
 
     {
       var rootContainerElement =
         container.nodeType === COMMENT_NODE ? container.parentNode : container;
+        // 为container绑定事件
       listenToAllSupportedEvents(rootContainerElement);
     }
 
@@ -30473,6 +30513,7 @@
       var warned = false;
       var rootSibling;
 
+      // 把容器内lastChild 复赋值给rootSibling 移除掉rootSibling
       while ((rootSibling = container.lastChild)) {
         {
           if (
